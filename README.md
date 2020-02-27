@@ -61,6 +61,18 @@ var ytVideoID = 'ou6Tt5w9B-Y';
   }
 ```
 
+```Dart
+// grab video data
+var ytVideoID = 'ou6Tt5w9B-Y';
+final video = await YoutubeVideoValidator.loadVideoInfo(ytVideoID);
+  if (video != null) {
+    print('Title: ${video.title}');
+    print('Views: ${video.views}');
+    print('Length (seconds): ${video.length}');
+    print('Link: ${video.shareUrl()}');
+  }
+```
+
 ## Tips
 
 You can also use this repo as a template for creating Dart packages, just clone the repo and start hacking :)

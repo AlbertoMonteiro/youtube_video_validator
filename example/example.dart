@@ -18,4 +18,12 @@ void main() async {
     print('Length (seconds): ${YoutubeVideoValidator.video.length}');
     print('Link: ${YoutubeVideoValidator.video.shareUrl()}');
   }
+
+  final video = await YoutubeVideoValidator.loadVideoInfo(ytVideoID);
+  if (video != null) {
+    print('Title: ${video.title}');
+    print('Views: ${video.views}');
+    print('Length (seconds): ${video.length}');
+    print('Link: ${video.shareUrl()}');
+  }
 }
