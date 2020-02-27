@@ -8,6 +8,8 @@ import 'package:youtube_video_validator/model/youtube_video_model.dart';
 
 /// Youtube Video Validator
 class YoutubeVideoValidator {
+  static YoutubeVideo video = YoutubeVideo();
+
   static const String _uriVideoInfo = 'http://youtube.com/get_video_info';
   static final Map<String, String> _playabilityStatus = {
     'ok': 'OK',
@@ -15,7 +17,9 @@ class YoutubeVideoValidator {
     'unplayable': 'UNPLAYABLE',
     'error': 'ERROR',
   };
-  static YoutubeVideo video = YoutubeVideo();
+  static const _queryStringLength = 'player_response='.length;
+  static final _pattern = RegExp(
+      r'^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$');
 
   /// Validate the specified Youtube video URL.
   static bool validateUrl(String url) {
@@ -27,53 +31,72 @@ class YoutubeVideoValidator {
       return false;
     }
 
-    final RegExp pattern = RegExp(
-        r'^(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$');
-    final bool match = pattern.hasMatch(url);
+    final bool match = _pattern.hasMatch(url);
 
     return match;
   }
 
   /// Validate the specified Youtube video ID.
-  static Future<bool> validateID(String videoID,
-      {bool loadData = false}) async {
+  static Future<bool> validateID(String videoID, {bool loadData = false}) async {
+    final Map<String, dynamic> videoInfo = await _getVideoInfo(videoID);
+
+    if (videoInfo == null) {
+      return false;
+    }
+
+    final bool isRealVideo = _isRealVideo(videoInfo);
+
+    if (loadData && isRealVideo) {
+      video.fromJson(videoInfo['videoDetails']);
+    }
+
+    return isRealVideo;
+  }
+
+  static Future<YoutubeVideo> loadVideoInfo(String videoID) async {
+    final Map<String, dynamic> videoInfo = await _getVideoInfo(videoID);
+
+    if (videoInfo == null) {
+      return null;
+    }
+
+    final bool isRealVideo = _isRealVideo(videoInfo);
+
+    return isRealVideo ? (YoutubeVideo()..fromJson(videoInfo['videoDetails'])) : null;
+  }
+
+  static bool _isRealVideo(Map<String, dynamic> videoInfo) {
+    final String videoStatus = videoInfo['playabilityStatus']['status'];
+    final bool isRealVideo =
+        videoStatus == _playabilityStatus['ok'] || videoStatus == _playabilityStatus['login_required'];
+    return isRealVideo;
+  }
+
+  static Future<Map<String, dynamic>> _getVideoInfo(String videoID) async {
     if (videoID == null) {
       throw ArgumentError('videoID');
     }
 
     if (videoID.isEmpty || videoID.length != 11) {
-      return false;
+      return null;
     }
 
-    final String url = '$_uriVideoInfo?video_id=$videoID';
+    final url = '$_uriVideoInfo?video_id=$videoID';
 
     final response = await http.get(url);
 
     if (response.statusCode != 200) {
-      return false;
+      return null;
     }
 
     final List<String> options = (response.body).split('&');
-    options.retainWhere((value) => value.contains('player_response='));
+    final option = options.firstWhere((value) => value.contains('player_response='), orElse: () => '');
 
-    if (options[0].startsWith('player_response=')) {
-      final Map<String, dynamic> videoJson = jsonDecode(
-          Uri.decodeFull(options[0].substring('player_response='.length)));
-
-      final bool isRealVideo = (videoJson['playabilityStatus']['status'] ==
-                  _playabilityStatus['ok'] ||
-              videoJson['playabilityStatus']['status'] ==
-                  _playabilityStatus['login_required'])
-          ? true
-          : false;
-
-      if (loadData && isRealVideo) {
-        video.fromJson(videoJson['videoDetails']);
-      }
-
-      return isRealVideo;
-    } else {
-      return false;
+    if (option == '') {
+      return null;
     }
+    final Map<String, dynamic> videoInfo = jsonDecode(Uri.decodeFull(option.substring(_queryStringLength)));
+
+    return videoInfo;
   }
 }

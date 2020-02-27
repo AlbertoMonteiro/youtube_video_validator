@@ -91,4 +91,20 @@ void main() {
     await expectLater(YoutubeVideoValidator.video.id, equals(actual),
         reason: 'Video Data: ${YoutubeVideoValidator.video.toString()}');
   });
+
+  test('loadVideoInfo with valid YoutubeVideoIDs', () async {
+    final String actual = validYoutubeVideoIDs[0];
+
+    final video = await YoutubeVideoValidator.loadVideoInfo(actual);
+
+    await expectLater(video.id, equals(actual), reason: 'Video Data: ${YoutubeVideoValidator.video.toString()}');
+  });
+
+  test('loadVideoInfo with invalid YoutubeVideoIDs', () async {
+    final String actual = inValidYoutubeVideoIDs[0];
+
+    final video = await YoutubeVideoValidator.loadVideoInfo(actual);
+
+    await expectLater(video, equals(null), reason: 'Video Data: ${YoutubeVideoValidator.video.toString()}');
+  });
 }

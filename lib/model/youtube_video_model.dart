@@ -13,17 +13,13 @@ class YoutubeVideo {
   double rating;
 
   @override
-  String toString() {
-    return '$title ($id) - $author';
-  }
+  String toString() => '$title ($id) - $author';
 
-  String shareUrl() {
-    return 'https://youtu.be/$id';
-  }
+  String shareUrl() => shareURL;
+  String channelUrl() => channelURL;
 
-  String channelUrl() {
-    return (channelID == null) ? null : 'https://youtube.com/user/$channelID';
-  }
+  String get shareURL => 'https://youtu.be/$id';
+  String get channelURL => (channelID == null) ? null : 'https://youtube.com/user/$channelID';
 
   void fromJson(Map<String, dynamic> json) {
     id = json['videoId'];
