@@ -12,7 +12,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-    youtube_video_validator: '^1.1.0'
+    youtube_video_validator: '^1.2.0'
 ```
 
 #### 2. Install it
